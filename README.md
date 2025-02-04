@@ -1,2 +1,1 @@
-# WEBSITEKU
-UKK
+# Discount-Calculator with JavaScript
