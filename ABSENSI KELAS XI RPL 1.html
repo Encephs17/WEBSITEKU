@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Absensi Kelas XI RPL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">📚 Absensi Kelas XI RPL 1</h1>
+                    <p class="text-gray-600 mt-2">Rekayasa Perangkat Lunak - SMK YAPPRI Sumedang</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-semibold text-indigo-600" id="currentDate"></div>
+                    <div class="text-sm text-gray-500" id="currentTime"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <span class="text-2xl">✅</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Hadir</p>
+                        <p class="text-2xl font-bold text-green-600" id="hadirCount">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <span class="text-2xl">⏰</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Terlambat</p>
+                        <p class="text-2xl font-bold text-yellow-600" id="terlambatCount">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <span class="text-2xl">🏥</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Sakit</p>
+                        <p class="text-2xl font-bold text-blue-600" id="sakitCount">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <span class="text-2xl">❌</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Alpha</p>
+                        <p class="text-2xl font-bold text-red-600" id="alphaCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Daftar Siswa</h2>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="showTambahSiswaModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        👤 Tambah Siswa
+                    </button>
+                    <button onclick="resetAbsensi()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        🔄 Reset Absensi
+                    </button>
+                    <button onclick="exportData()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        📊 Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Student List -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="text-left p-4 font-semibold text-gray-700">No</th>
+                            <th class="text-left p-4 font-semibold text-gray-700">Nama Siswa</th>
+                            <th class="text-left p-4 font-semibold text-gray-700">NIS</th>
+                            <th class="text-center p-4 font-semibold text-gray-700">Status Kehadiran</th>
+                            <th class="text-center p-4 font-semibold text-gray-700">Waktu</th>
+                            <th class="text-center p-4 font-semibold text-gray-700">Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentList">
+                        <!-- Students will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Report -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mt-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">📈 Ringkasan Absensi</h3>
+                <button onclick="cetakLaporan()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    🖨️ Cetak Laporan
+                </button>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Siswa</p>
+                        <p class="text-xl font-bold text-gray-800" id="totalSiswa">30</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Persentase Hadir</p>
+                        <p class="text-xl font-bold text-green-600" id="persentaseHadir">0%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Belum Absen</p>
+                        <p class="text-xl font-bold text-gray-600" id="belumAbsen">30</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Terakhir Update</p>
+                        <p class="text-sm font-semibold text-indigo-600" id="lastUpdate">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Siswa -->
+    <div id="tambahSiswaModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">👤 Tambah Siswa Baru</h3>
+                <button onclick="closeTambahSiswaModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    ×
+                </button>
+            </div>
+            
+            <form id="tambahSiswaForm" onsubmit="tambahSiswa(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                    <input type="text" id="namaSiswa" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Masukkan nama lengkap siswa">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">NIS (Nomor Induk Siswa)</label>
+                    <input type="text" id="nisSiswa" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Contoh: 2024031">
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeTambahSiswaModal()" 
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        Tambah Siswa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data siswa kelas XI RPL
+        const students = [
+            { id: 1, nama: "Ahmad Rizki Pratama", nis: "2024001" },
+            { id: 2, nama: "Siti Nurhaliza", nis: "2024002" },
+            { id: 3, nama: "Budi Santoso", nis: "2024003" },
+            { id: 4, nama: "Dewi Sartika", nis: "2024004" },
+            { id: 5, nama: "Eko Prasetyo", nis: "2024005" },
+            { id: 6, nama: "Fitri Handayani", nis: "2024006" },
+            { id: 7, nama: "Gilang Ramadhan", nis: "2024007" },
+            { id: 8, nama: "Hana Pertiwi", nis: "2024008" },
+            { id: 9, nama: "Indra Gunawan", nis: "2024009" },
+            { id: 10, nama: "Joko Widodo", nis: "2024010" },
+            { id: 11, nama: "Kartika Sari", nis: "2024011" },
+            { id: 12, nama: "Lukman Hakim", nis: "2024012" },
+            { id: 13, nama: "Maya Sari", nis: "2024013" },
+            { id: 14, nama: "Nanda Pratama", nis: "2024014" },
+            { id: 15, nama: "Oki Setiawan", nis: "2024015" },
+            { id: 16, nama: "Putri Ayu", nis: "2024016" },
+            { id: 17, nama: "Qori Maulana", nis: "2024017" },
+            { id: 18, nama: "Rina Wati", nis: "2024018" },
+            { id: 19, nama: "Surya Dinata", nis: "2024019" },
+            { id: 20, nama: "Tari Melati", nis: "2024020" },
+            { id: 21, nama: "Umar Faruq", nis: "2024021" },
+            { id: 22, nama: "Vina Maulida", nis: "2024022" },
+            { id: 23, nama: "Wahyu Hidayat", nis: "2024023" },
+            { id: 24, nama: "Xenia Putri", nis: "2024024" },
+            { id: 25, nama: "Yudi Setiawan", nis: "2024025" },
+            { id: 26, nama: "Zahra Aulia", nis: "2024026" },
+            { id: 27, nama: "Arif Rahman", nis: "2024027" },
+            { id: 28, nama: "Bella Safira", nis: "2024028" },
+            { id: 29, nama: "Citra Dewi", nis: "2024029" },
+            { id: 30, nama: "Dani Kurniawan", nis: "2024030" }
+        ];
+
+        let attendance = {};
+
+        // Initialize attendance data
+        students.forEach(student => {
+            attendance[student.id] = {
+                status: null,
+                time: null,
+                keterangan: ''
+            };
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', dateOptions);
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('id-ID', timeOptions);
+        }
+
+        function renderStudents() {
+            const tbody = document.getElementById('studentList');
+            tbody.innerHTML = '';
+
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50 transition-colors fade-in';
+                
+                const attendanceData = attendance[student.id];
+                const statusClass = getStatusClass(attendanceData.status);
+                const statusText = getStatusText(attendanceData.status);
+                const statusIcon = getStatusIcon(attendanceData.status);
+
+                row.innerHTML = `
+                    <td class="p-4 font-medium text-gray-700">${index + 1}</td>
+                    <td class="p-4">
+                        <div class="font-semibold text-gray-800">${student.nama}</div>
+                    </td>
+                    <td class="p-4 text-gray-600">${student.nis}</td>
+                    <td class="p-4 text-center">
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            <button onclick="markAttendance(${student.id}, 'hadir')" 
+                                    class="px-3 py-1 rounded-full text-xs font-medium transition-colors ${attendanceData.status === 'hadir' ? 'bg-green-500 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
+                                ✅ Hadir
+                            </button>
+                            <button onclick="markAttendance(${student.id}, 'terlambat')" 
+                                    class="px-3 py-1 rounded-full text-xs font-medium transition-colors ${attendanceData.status === 'terlambat' ? 'bg-yellow-500 text-white' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'}">
+                                ⏰ Terlambat
+                            </button>
+                            <button onclick="markAttendance(${student.id}, 'sakit')" 
+                                    class="px-3 py-1 rounded-full text-xs font-medium transition-colors ${attendanceData.status === 'sakit' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}">
+                                🏥 Sakit
+                            </button>
+                            <button onclick="markAttendance(${student.id}, 'alpha')" 
+                                    class="px-3 py-1 rounded-full text-xs font-medium transition-colors ${attendanceData.status === 'alpha' ? 'bg-red-500 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'}">
+                                ❌ Alpha
+                            </button>
+                        </div>
+                        ${attendanceData.status ? `
+                            <div class="mt-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                    ${statusIcon} ${statusText}
+                                </span>
+                            </div>
+                        ` : ''}
+                    </td>
+                    <td class="p-4 text-center text-sm text-gray-600">
+                        ${attendanceData.time || '-'}
+                    </td>
+                    <td class="p-4 text-center">
+                        <input type="text" 
+                               placeholder="Tambah keterangan..." 
+                               value="${attendanceData.keterangan || ''}"
+                               onchange="updateKeterangan(${student.id}, this.value)"
+                               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'hadir': 'bg-green-100 text-green-800',
+                'terlambat': 'bg-yellow-100 text-yellow-800',
+                'sakit': 'bg-blue-100 text-blue-800',
+                'alpha': 'bg-red-100 text-red-800'
+            };
+            return classes[status] || '';
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'hadir': 'Hadir',
+                'terlambat': 'Terlambat',
+                'sakit': 'Sakit',
+                'alpha': 'Alpha'
+            };
+            return texts[status] || '';
+        }
+
+        function getStatusIcon(status) {
+            const icons = {
+                'hadir': '✅',
+                'terlambat': '⏰',
+                'sakit': '🏥',
+                'alpha': '❌'
+            };
+            return icons[status] || '';
+        }
+
+        function markAttendance(studentId, status) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            attendance[studentId] = {
+                ...attendance[studentId],
+                status: status,
+                time: timeString
+            };
+
+            updateStats();
+            renderStudents();
+            updateLastUpdate();
+        }
+
+        function updateKeterangan(studentId, keterangan) {
+            attendance[studentId] = {
+                ...attendance[studentId],
+                keterangan: keterangan
+            };
+            updateLastUpdate();
+        }
+
+        function updateStats() {
+            const stats = {
+                hadir: 0,
+                terlambat: 0,
+                sakit: 0,
+                alpha: 0
+            };
+
+            Object.values(attendance).forEach(record => {
+                if (record.status) {
+                    stats[record.status]++;
+                }
+            });
+
+            document.getElementById('hadirCount').textContent = stats.hadir;
+            document.getElementById('terlambatCount').textContent = stats.terlambat;
+            document.getElementById('sakitCount').textContent = stats.sakit;
+            document.getElementById('alphaCount').textContent = stats.alpha;
+
+            const totalAbsen = stats.hadir + stats.terlambat + stats.sakit + stats.alpha;
+            const totalSiswa = students.length;
+            const belumAbsen = totalSiswa - totalAbsen;
+            const persentaseHadir = totalSiswa > 0 ? Math.round((stats.hadir / totalSiswa) * 100) : 0;
+
+            document.getElementById('belumAbsen').textContent = belumAbsen;
+            document.getElementById('persentaseHadir').textContent = persentaseHadir + '%';
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('lastUpdate').textContent = timeString;
+        }
+
+        function showTambahSiswaModal() {
+            document.getElementById('tambahSiswaModal').classList.remove('hidden');
+            document.getElementById('tambahSiswaModal').classList.add('flex');
+            document.getElementById('namaSiswa').focus();
+        }
+
+        function closeTambahSiswaModal() {
+            document.getElementById('tambahSiswaModal').classList.add('hidden');
+            document.getElementById('tambahSiswaModal').classList.remove('flex');
+            document.getElementById('tambahSiswaForm').reset();
+        }
+
+        function tambahSiswa(event) {
+            event.preventDefault();
+            
+            const nama = document.getElementById('namaSiswa').value.trim();
+            const nis = document.getElementById('nisSiswa').value.trim();
+            
+            // Validasi NIS tidak duplikat
+            const existingNis = students.find(student => student.nis === nis);
+            if (existingNis) {
+                alert('NIS sudah digunakan! Silakan gunakan NIS yang berbeda.');
+                return;
+            }
+            
+            // Buat ID baru (ID tertinggi + 1)
+            const newId = Math.max(...students.map(s => s.id)) + 1;
+            
+            // Tambah siswa baru
+            const newStudent = {
+                id: newId,
+                nama: nama,
+                nis: nis
+            };
+            
+            students.push(newStudent);
+            
+            // Initialize attendance untuk siswa baru
+            attendance[newId] = {
+                status: null,
+                time: null,
+                keterangan: ''
+            };
+            
+            // Update tampilan
+            renderStudents();
+            updateStats();
+            closeTambahSiswaModal();
+            
+            // Update total siswa di ringkasan
+            document.getElementById('totalSiswa').textContent = students.length;
+            
+            alert(`Siswa "${nama}" berhasil ditambahkan!`);
+        }
+
+        function resetAbsensi() {
+            if (confirm('Apakah Anda yakin ingin mereset semua data absensi?')) {
+                students.forEach(student => {
+                    attendance[student.id] = {
+                        status: null,
+                        time: null,
+                        keterangan: ''
+                    };
+                });
+                updateStats();
+                renderStudents();
+                document.getElementById('lastUpdate').textContent = '-';
+            }
+        }
+
+        function exportData() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('id-ID');
+            
+            let csvContent = "No,Nama,NIS,Status,Waktu,Keterangan\n";
+            
+            students.forEach((student, index) => {
+                const attendanceData = attendance[student.id];
+                const status = attendanceData.status || 'Belum Absen';
+                const time = attendanceData.time || '-';
+                const keterangan = attendanceData.keterangan || '-';
+                
+                csvContent += `${index + 1},"${student.nama}",${student.nis},${status},${time},"${keterangan}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Absensi_XI_RPL_${dateString.replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function cetakLaporan() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('id-ID', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const timeString = now.toLocaleTimeString('id-ID');
+
+            // Hitung statistik
+            const stats = {
+                hadir: 0,
+                terlambat: 0,
+                sakit: 0,
+                alpha: 0
+            };
+
+            Object.values(attendance).forEach(record => {
+                if (record.status) {
+                    stats[record.status]++;
+                }
+            });
+
+            const totalAbsen = stats.hadir + stats.terlambat + stats.sakit + stats.alpha;
+            const totalSiswa = students.length;
+            const belumAbsen = totalSiswa - totalAbsen;
+            const persentaseHadir = totalSiswa > 0 ? Math.round((stats.hadir / totalSiswa) * 100) : 0;
+
+            // Buat konten laporan
+            let laporanHTML = `
+                <html>
+                <head>
+                    <title>Laporan Absensi Kelas XI RPL</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                        .info { margin-bottom: 20px; }
+                        .stats { display: flex; justify-content: space-around; margin: 20px 0; background: #f5f5f5; padding: 15px; border-radius: 8px; }
+                        .stat-item { text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .status-hadir { background-color: #d4edda; color: #155724; }
+                        .status-terlambat { background-color: #fff3cd; color: #856404; }
+                        .status-sakit { background-color: #cce7ff; color: #004085; }
+                        .status-alpha { background-color: #f8d7da; color: #721c24; }
+                        .footer { margin-top: 30px; text-align: right; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>LAPORAN ABSENSI KELAS XI RPL 1</h1>
+                        <h3>Rekayasa Perangkat Lunak - SMK YAPPRI Sumedang</h3>
+                        <p><strong>Tanggal:</strong> ${dateString}</p>
+                        <p><strong>Waktu Cetak:</strong> ${timeString}</p>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-item">
+                            <h3>${stats.hadir}</h3>
+                            <p>Hadir</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>${stats.terlambat}</h3>
+                            <p>Terlambat</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>${stats.sakit}</h3>
+                            <p>Sakit</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>${stats.alpha}</h3>
+                            <p>Alpha</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>${belumAbsen}</h3>
+                            <p>Belum Absen</p>
+                        </div>
+                    </div>
+
+                    <div class="info">
+                        <p><strong>Total Siswa:</strong> ${totalSiswa} orang</p>
+                        <p><strong>Persentase Kehadiran:</strong> ${persentaseHadir}%</p>
+                        <p><strong>Siswa yang Sudah Absen:</strong> ${totalAbsen} orang</p>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Siswa</th>
+                                <th>NIS</th>
+                                <th>Status</th>
+                                <th>Waktu</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            students.forEach((student, index) => {
+                const attendanceData = attendance[student.id];
+                const status = attendanceData.status || 'Belum Absen';
+                const time = attendanceData.time || '-';
+                const keterangan = attendanceData.keterangan || '-';
+                const statusClass = attendanceData.status ? `status-${attendanceData.status}` : '';
+
+                laporanHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${student.nama}</td>
+                        <td>${student.nis}</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td>${time}</td>
+                        <td>${keterangan}</td>
+                    </tr>
+                `;
+            });
+
+            laporanHTML += `
+                        </tbody>
+                    </table>
+
+                    <div class="footer">
+                        <p>Mengetahui,</p>
+                        <br><br><br>
+                        <p>_________________________</p>
+                        <p>Guru Mata Pelajaran</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            // Buka jendela baru untuk cetak
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(laporanHTML);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+
+        // Initialize the application
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        renderStudents();
+        updateStats();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98811f40e6e73d83',t:'MTc1OTM3NTgzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
